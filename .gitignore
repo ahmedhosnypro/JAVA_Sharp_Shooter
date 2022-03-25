@@ -1,0 +1,5 @@
+# Project exclude paths
+/.gradle/
+/Sharp Shooter/task/build/
+/Sharp Shooter/task/out/
+/Sharp Shooter/task/out/production/classes/

@@ -2,17 +2,71 @@ package shooter;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.ArrayList;
 
 public class Canvas extends JPanel implements MouseListener {
+    int gunSightX = 340;
+    int gunSightY = 340;
+
+    transient ArrayList<BulletHole> bulletHoles = new ArrayList<>();
+
     Canvas(String name) {
         setName(name);
         setPreferredSize(new Dimension(700, 700));
         setMinimumSize(new Dimension(700, 700));
         setBackground(Color.DARK_GRAY);
 
+
         addMouseListener(this);
+
+        //space-32 left-37 up-38 right-39 down-40
+        addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                //not used
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                switch (e.getKeyCode()) {
+                    case 32 -> shoot();
+                    case 37 -> {     //left
+                        if (gunSightX >= 40) {
+                            gunSightX -= 10;
+                        }
+                    }
+                    case 38 -> {     //up
+                        if (gunSightY >= 40) {
+                            gunSightY -= 10;
+                        }
+                    }
+                    case 39 -> {     //right
+                        if (gunSightX <= 640) {
+                            gunSightX += 10;
+                        }
+                    }
+                    case 40 -> {     //down
+                        if (gunSightY <= 640) {
+                            gunSightY += 10;
+                        }
+                    }
+                }
+                repaint();
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                //not used
+            }
+        });
+    }
+
+    private void shoot() {
+        bulletHoles.add(new BulletHole(gunSightX, gunSightY));
     }
 
     @Override
@@ -43,7 +97,12 @@ public class Canvas extends JPanel implements MouseListener {
 
         //Gun Sight
         g.setColor(Color.RED);
-        g.fillOval(280, 480, 40, 40);
+        g.fillOval(gunSightX, gunSightY, 20, 20);
+
+        g.setColor(Color.lightGray);
+        for (var bh : bulletHoles) {
+            g.fillOval(bh.getX(), bh.getY(), 10, 10);
+        }
     }
 
     @Override
@@ -54,21 +113,21 @@ public class Canvas extends JPanel implements MouseListener {
 
     @Override
     public void mousePressed(MouseEvent e) {
-
+        //not used
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-
+        //not used
     }
 
     @Override
     public void mouseEntered(MouseEvent e) {
-
+        //not used
     }
 
     @Override
     public void mouseExited(MouseEvent e) {
-
+        //not used
     }
 }

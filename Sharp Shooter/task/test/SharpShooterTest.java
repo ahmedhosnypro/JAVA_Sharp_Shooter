@@ -1,4 +1,3 @@
-import org.assertj.swing.fixture.JLabelFixture;
 import org.assertj.swing.fixture.JPanelFixture;
 import org.assertj.swing.image.ScreenshotTaker;
 import org.hyperskill.hstest.dynamic.DynamicTest;
@@ -12,134 +11,215 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.text.MessageFormat;
 
-import static java.util.stream.IntStream.range;
+import static java.awt.event.KeyEvent.*;
 import static org.hyperskill.hstest.testcase.CheckResult.correct;
 
 public class SharpShooterTest extends SwingTest {
+
+    private static final int TARGET_CIRCLE_STEP = 30;
+    private static final int TARGET_CENTER = 350;
+    private static final int SIGHT_RADIUS = 40;
+    private static final int MOVE_STEP = 10;
 
     public SharpShooterTest() {
         super(new SharpShooter());
     }
 
-    private static final int TARGET_CIRCLE_STEP = 30;
-    private static final int TARGET_CENTER = 350;
-
-    private BufferedImage screenshot;
-
     @SwingComponent
     private JPanelFixture canvas;
 
-    @SwingComponent
-    private JLabelFixture statusbar;
-
-    public void takeScreenshot() {
-        if (screenshot == null) {
-            var screenshotTaker = new ScreenshotTaker();
-            screenshot = screenshotTaker.takeScreenshotOf(canvas.target());
-        }
-    }
-
-
-    @DynamicTest(feedback = "The Statusbar should be visible.")
+    @DynamicTest(feedback = "Shoot at the center of the target.")
     CheckResult test1() {
 
-        requireVisible(statusbar);
+        canvas.pressKey(VK_SPACE);
 
-        assertEquals(false, statusbar.text().isEmpty(),
-            "The Statusbar should have some text");
+        var screenshot = takeScreenshot();
+        assertEquals(true,
+                checkBullet(screenshot, TARGET_CENTER, TARGET_CENTER),
+                "The point ({0}, {1}) was tested.", TARGET_CENTER, TARGET_CENTER);
 
         return correct();
     }
 
-    @DynamicTest(feedback = "The Canvas should be visible and should be focused.")
+    @DynamicTest(feedback = "Make 10 moves to the right and shoot.")
     CheckResult test2() {
 
-        requireVisible(canvas);
+        for (int i = 0; i < 10; i++) {
+            canvas.pressKey(VK_RIGHT);
+        }
+        canvas.pressKey(VK_SPACE);
 
-        canvas.requireFocused();
+        var screenshot = takeScreenshot();
+        assertEquals(true,
+                checkBullet(screenshot, TARGET_CENTER, TARGET_CENTER),
+                "The point ({0}, {1) was tested.", TARGET_CENTER, TARGET_CENTER);
+
+        assertEquals(true,
+                checkBullet(screenshot, 10 * MOVE_STEP + TARGET_CENTER, TARGET_CENTER),
+                "The point ({0}, {1}) was tested.", 10 * MOVE_STEP + TARGET_CENTER, TARGET_CENTER);
 
         return correct();
     }
 
-    @DynamicTest(feedback = "The Canvas should contain the whole Target object.")
+    @DynamicTest(feedback = "Make 10 moves to the up and shoot.")
     CheckResult test3() {
 
-        takeScreenshot();
+        for (int i = 0; i < 10; i++) {
+            canvas.pressKey(VK_UP);
+        }
+        canvas.pressKey(VK_SPACE);
 
-        final var MIN_WIDTH = TARGET_CENTER + 10 * TARGET_CIRCLE_STEP;
+        var screenshot = takeScreenshot();
+        assertEquals(true,
+                checkBullet(screenshot, TARGET_CENTER, TARGET_CENTER),
+                "The point ({0}, {1}) was tested.", TARGET_CENTER, TARGET_CENTER);
 
-        assertEquals(MIN_WIDTH <= screenshot.getWidth() &&
-                MIN_WIDTH <= screenshot.getHeight(), true,
-            "The Canvas width should be at least TARGET_CENTER + 10 * TARGET_CIRCLE_STEP = {0}.",
-            TARGET_CENTER + 10 * TARGET_CIRCLE_STEP);
+        assertEquals(true,
+                checkBullet(screenshot, 10 * MOVE_STEP + TARGET_CENTER, TARGET_CENTER),
+                "The point ({0}, {1}) was tested.",10 * MOVE_STEP + TARGET_CENTER, TARGET_CENTER);
+
+        assertEquals(true,
+                checkBullet(screenshot, 10 * MOVE_STEP + TARGET_CENTER, TARGET_CENTER - 10 * MOVE_STEP),
+                "The point ({0}, {1}) was tested.", 10 * MOVE_STEP + TARGET_CENTER, TARGET_CENTER - 10 * MOVE_STEP);
 
         return correct();
     }
 
-    @DynamicTest(feedback = "The Target should have Color.DARK_GRAY background.")
+    @DynamicTest(feedback = "Make 20 moves to the left and shoot.")
     CheckResult test4() {
 
-        takeScreenshot();
+        for (int i = 0; i < 20; i++) {
+            canvas.pressKey(VK_LEFT);
+        }
+        canvas.pressKey(VK_SPACE);
 
-        final var X_TEST = 10;
-        final var Y_TEST = 10;
+        var screenshot = takeScreenshot();
+        assertEquals(true,
+                checkBullet(screenshot, TARGET_CENTER, TARGET_CENTER),
+                "The point ({0}, {1}) was tested.", TARGET_CENTER, TARGET_CENTER);
 
-        assertEquals(Color.DARK_GRAY.getRGB(), screenshot.getRGB(X_TEST, Y_TEST),
-            "The point at ({0}, {1}) should have Color.DARK_GRAY.", X_TEST, Y_TEST);
+        assertEquals(true,
+                checkBullet(screenshot, 10 * MOVE_STEP + TARGET_CENTER, TARGET_CENTER),
+                "The point ({0}, {1}) was tested.",10 * MOVE_STEP + TARGET_CENTER, TARGET_CENTER);
+
+        assertEquals(true,
+                checkBullet(screenshot, 10 * MOVE_STEP + TARGET_CENTER, TARGET_CENTER - 10 * MOVE_STEP),
+                "The point ({0}, {1}) was tested.", 10 * MOVE_STEP + TARGET_CENTER, TARGET_CENTER - 10 * MOVE_STEP);
+
+        assertEquals(true,
+                checkBullet(screenshot, TARGET_CENTER - 10 * MOVE_STEP, TARGET_CENTER - 10 * MOVE_STEP),
+                "The point ({0}, {1}) was tested.", TARGET_CENTER - 10 * MOVE_STEP, TARGET_CENTER - 10 * MOVE_STEP);
 
         return correct();
     }
 
-
-    private static final Color[] CIRCLE_COLORS = new Color[]{
-        Color.BLACK, Color.BLACK, Color.BLACK, Color.BLACK, Color.BLACK,
-        Color.BLACK, Color.WHITE, Color.WHITE, Color.WHITE, Color.BLACK};
-
-    @DynamicTest(feedback = "The Target should have Color.BLACK and Color.WHITE concentric circles. " +
-        "Center point of the Target should be at (" + TARGET_CENTER + ", " + TARGET_CENTER + ").")
+    @DynamicTest(feedback = "Make 20 moves to the down and shoot.")
     CheckResult test5() {
 
-        takeScreenshot();
+        for (int i = 0; i < 20; i++) {
+            canvas.pressKey(VK_DOWN);
+        }
+        canvas.pressKey(VK_SPACE);
 
-        range(1, 10).forEach(index -> {
-            var x = (int) (TARGET_CENTER + (9 - index) * TARGET_CIRCLE_STEP * Math.PI / 4)
-                + (int) (index < 9 ? 0.5 * TARGET_CIRCLE_STEP * Math.PI / 4 : 0);
-            var y = (int) (TARGET_CENTER + (9 - index) * TARGET_CIRCLE_STEP * Math.PI / 4)
-                + (int) (index < 9 ? 0.5 * TARGET_CIRCLE_STEP * Math.PI / 4 : 0);
+        var screenshot = takeScreenshot();
+        assertEquals(true,
+                checkBullet(screenshot, 350, 350),
+                "The point (350, 350) was tested.");
 
-            assertEquals(CIRCLE_COLORS[index].getRGB(), screenshot.getRGB(x, y),
-                "The {0} outer circle should be a {1} color. ({2}, {3}) point was tested.",
-                index + 1, CIRCLE_COLORS[index].equals(Color.BLACK) ? "Color.BLACK" : "Color.WHITE", x, y);
-        });
+        assertEquals(true,
+                checkBullet(screenshot, 450, 350),
+                "The point (250, 350) was tested.");
+
+        assertEquals(true,
+                checkBullet(screenshot, 450, 250),
+                "The point (450, 250) was tested.");
+
+        assertEquals(true,
+                checkBullet(screenshot, 250, 250),
+                "The point (250, 250) was tested.");
+
+        assertEquals(true,
+                checkBullet(screenshot, 250, 450),
+                "The point (250, 450) was tested.");
 
         return correct();
     }
 
-    @DynamicTest(feedback = "Put the center of the bullet hole at the point (300, 500).")
+    @DynamicTest(feedback = "The cursor should not be outside the screen.")
     CheckResult test6() {
+        for (int i = 0; i < 50; i++) {
+            canvas.pressKey(VK_DOWN);
+        }
+        for (int i = 0; i < 50; i++) {
+            canvas.pressKey(VK_RIGHT);
+        }
+        canvas.pressKey(VK_SPACE);
 
-        takeScreenshot();
-
-        final var BULLET_X = 300;
-        final var BULLET_Y = 500;
-
-        assertEquals(Color.BLACK.getRGB() == screenshot.getRGB(BULLET_X, BULLET_Y), false,
-                "The color of the Bullet should not be Color.BLACK.");
-        assertEquals(Color.WHITE.getRGB() == screenshot.getRGB(BULLET_X, BULLET_Y), false,
-            "The color of the Bullet should not be Color.WHITE.");
-        assertEquals(Color.DARK_GRAY.getRGB() == screenshot.getRGB(BULLET_X, BULLET_Y), false,
-            "The color of the Bullet should not be Color.DARK_GRAY.");
-
+        var screenshot = takeScreenshot();
+        assertEquals(true,
+                checkBullet(screenshot, 2 * TARGET_CENTER - SIGHT_RADIUS, 2 * TARGET_CENTER - SIGHT_RADIUS),
+                "The point ({0}, {1}) was tested.", 2 * TARGET_CENTER - SIGHT_RADIUS, 2 * TARGET_CENTER - SIGHT_RADIUS);
         return correct();
     }
 
-    // TODO: The sight should stay on screen
+    @DynamicTest(feedback = "The cursor should not be outside the screen.")
+    CheckResult test7() {
+        for (int i = 0; i < 80; i++) {
+            canvas.pressKey(VK_UP);
+        }
+        canvas.pressKey(VK_SPACE);
+
+        var screenshot = takeScreenshot();
+        assertEquals(true,
+                checkBullet(screenshot, 2 * TARGET_CENTER - SIGHT_RADIUS, SIGHT_RADIUS),
+                "The point ({0}, {1}) was tested.", 2 * TARGET_CENTER - SIGHT_RADIUS, SIGHT_RADIUS);
+        return correct();
+    }
+
+    @DynamicTest(feedback = "The cursor should not be outside the screen.")
+    CheckResult test8() {
+        for (int i = 0; i < 80; i++) {
+            canvas.pressKey(VK_LEFT);
+        }
+        canvas.pressKey(VK_SPACE);
+
+        var screenshot = takeScreenshot();
+        assertEquals(true,
+                checkBullet(screenshot, SIGHT_RADIUS, SIGHT_RADIUS),
+                "The point ({0}, {1}) was tested.", SIGHT_RADIUS, SIGHT_RADIUS);
+        return correct();
+    }
+
+    @DynamicTest(feedback = "The cursor should not be outside the screen.")
+    CheckResult test9() {
+        for (int i = 0; i < 80; i++) {
+            canvas.pressKey(VK_DOWN);
+        }
+        canvas.pressKey(VK_SPACE);
+
+        var screenshot = takeScreenshot();
+        assertEquals(true,
+                checkBullet(screenshot, SIGHT_RADIUS, 2 * TARGET_CENTER - SIGHT_RADIUS),
+                "The point ({0}, {1}) was tested.", SIGHT_RADIUS, 2 * TARGET_CENTER - SIGHT_RADIUS);
+        return correct();
+    }
+
+    private BufferedImage takeScreenshot() {
+        var screenshotTaker = new ScreenshotTaker();
+        return screenshotTaker.takeScreenshotOf(canvas.target());
+    }
+
+    private boolean checkBullet(BufferedImage screenshot, int x, int y) {
+        return Color.BLACK.getRGB() != screenshot.getRGB(x, y) &&
+                Color.WHITE.getRGB() != screenshot.getRGB(x, y) &&
+                Color.DARK_GRAY.getRGB() != screenshot.getRGB(x, y);
+    }
 
     private static void assertEquals(
-        final Object expected,
-        final Object actual,
-        final String error,
-        final Object... args) {
+            final Object expected,
+            final Object actual,
+            final String error,
+            final Object... args) {
 
         if (!expected.equals(actual)) {
             final var feedback = MessageFormat.format(error, args);
