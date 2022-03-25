@@ -2,132 +2,82 @@ package shooter;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.util.ArrayList;
+import java.awt.image.BufferedImage;
+import java.util.*;
 
-public class Canvas extends JPanel implements MouseListener {
-    int gunSightX = 340;
-    int gunSightY = 340;
+public class Canvas extends JPanel {
+    final Map<Point, Integer> holes = new IdentityHashMap<>();
+    private static final BufferedImage TARGET = createTargetImage();
+    static final JLabel sight = new JLabel();
+    final BufferedImage SIGHT_IMAGE;
 
-    transient ArrayList<BulletHole> bulletHoles = new ArrayList<>();
-
-    Canvas(String name) {
-        setName(name);
+    public Canvas() {
+        setName("Canvas");
         setPreferredSize(new Dimension(700, 700));
-        setMinimumSize(new Dimension(700, 700));
         setBackground(Color.DARK_GRAY);
-
-
-        addMouseListener(this);
-
-        //space-32 left-37 up-38 right-39 down-40
-        addKeyListener(new KeyListener() {
-            @Override
-            public void keyTyped(KeyEvent e) {
-                //not used
-            }
-
-            @Override
-            public void keyPressed(KeyEvent e) {
-                switch (e.getKeyCode()) {
-                    case 32 -> shoot();
-                    case 37 -> {     //left
-                        if (gunSightX >= 40) {
-                            gunSightX -= 10;
-                        }
-                    }
-                    case 38 -> {     //up
-                        if (gunSightY >= 40) {
-                            gunSightY -= 10;
-                        }
-                    }
-                    case 39 -> {     //right
-                        if (gunSightX <= 640) {
-                            gunSightX += 10;
-                        }
-                    }
-                    case 40 -> {     //down
-                        if (gunSightY <= 640) {
-                            gunSightY += 10;
-                        }
-                    }
-                }
-                repaint();
-            }
-
-            @Override
-            public void keyReleased(KeyEvent e) {
-                //not used
-            }
-        });
+        setFocusable(true);
+        setLayout(null);
+        sight.setPreferredSize(new Dimension(80, 80));
+        sight.setLocation(new Point(350, 350));
+        add(sight);
+        SIGHT_IMAGE = createSightImage();
     }
 
-    private void shoot() {
-        bulletHoles.add(new BulletHole(gunSightX, gunSightY));
-    }
-
-    @Override
-    public void paint(Graphics g) {
-        super.paint(g);
-
-        g.setColor(Color.BLACK);
-
-        //1-6 circles
-        g.fillOval(50, 50, 600, 600);
-        g.fillOval(80, 80, 540, 540);
-        g.fillOval(110, 110, 480, 480);
-        g.fillOval(140, 140, 420, 420);
-        g.fillOval(170, 170, 360, 360);
-        g.fillOval(200, 200, 300, 300);
-
-        g.setColor(Color.WHITE);
-
-        //7-9 circles
-        g.fillOval(230, 230, 240, 240);
-        g.fillOval(260, 260, 180, 180);
-        g.fillOval(290, 290, 120, 120);
-
-        g.setColor(Color.BLACK);
-
-        //10th circle
-        g.fillOval(320, 320, 60, 60);
-
-        //Gun Sight
-        g.setColor(Color.RED);
-        g.fillOval(gunSightX, gunSightY, 20, 20);
-
-        g.setColor(Color.lightGray);
-        for (var bh : bulletHoles) {
-            g.fillOval(bh.getX(), bh.getY(), 10, 10);
+    private static BufferedImage createTargetImage() {
+        BufferedImage image = new BufferedImage(700, 700, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2D = image.createGraphics();
+        g2D.setColor(Color.BLACK);
+        g2D.fillOval(50, 50, 600, 600);
+        g2D.setColor(Color.WHITE);
+        g2D.fillOval(230, 230, 240, 240);
+        g2D.setColor(Color.BLACK);
+        g2D.fillOval(320, 320, 60, 60);
+        g2D.setFont(new Font("Tahoma", Font.PLAIN | Font.BOLD, 20));
+        for (int i = 0, n = 1; n <= 10; i += 30, n++) {
+            g2D.setColor(n > 6 ? Color.BLACK : Color.WHITE);
+            g2D.drawOval(50 + i, 50 + i, 600 - 2 * i, 600 - 2 * i);
+            if (n != 10) {
+                g2D.drawString(String.valueOf(n), 60 + i, 358);
+                g2D.drawString(String.valueOf(n), 630 - i, 358);
+                g2D.drawString(String.valueOf(n), 344, 72 + i);
+                g2D.drawString(String.valueOf(n), 344, 643 - i);
+            }
         }
+        return image;
+    }
+
+    private static BufferedImage createSightImage() {
+        BufferedImage image = new BufferedImage(80, 80, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2D = image.createGraphics();
+        g2D.setColor(Color.RED);
+        g2D.setStroke(new BasicStroke(1f));
+        g2D.drawLine(0, 40, 35, 40);
+        g2D.drawLine(45, 40, 80, 40);
+        g2D.drawLine(40, 0, 40, 35);
+        g2D.drawLine(40, 45, 40, 80);
+        g2D.setStroke(new BasicStroke(3f));
+        g2D.drawOval(1, 1, 78, 78);
+        return image;
+    }
+
+    void addInstructions() {
+        var legend = new JLabel("<html><font color=red size=+1><b>\u2192 \u2190 \u2191 \u2193</b></font> - aim<br>" +
+                "<font color=red>SPACE</font> - shot", SwingConstants.RIGHT);
+        legend.setSize(new Dimension(100, 40));
+        legend.setForeground(Color.WHITE);
+        legend.setFont(new Font("Arial", Font.PLAIN, 10));
+        add(legend);
+        legend.repaint();
     }
 
     @Override
-    public void mouseClicked(MouseEvent e) {
-        System.out.println(e.getX());
-        System.out.println(e.getY());
-    }
-
-    @Override
-    public void mousePressed(MouseEvent e) {
-        //not used
-    }
-
-    @Override
-    public void mouseReleased(MouseEvent e) {
-        //not used
-    }
-
-    @Override
-    public void mouseEntered(MouseEvent e) {
-        //not used
-    }
-
-    @Override
-    public void mouseExited(MouseEvent e) {
-        //not used
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Graphics2D g2D = (Graphics2D) g;
+        g2D.drawImage(TARGET, 0, 0, this);
+        g2D.setColor(Color.CYAN);
+        holes.keySet().forEach(h -> g2D.fillOval(h.x - 5, h.y - 5, 10, 10));
+        var point = sight.getLocation();
+        g2D.drawImage(SIGHT_IMAGE, point.x - 40, point.y - 40, null);
     }
 }

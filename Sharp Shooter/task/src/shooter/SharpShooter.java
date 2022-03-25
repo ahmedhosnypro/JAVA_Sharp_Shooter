@@ -6,41 +6,21 @@ import java.awt.*;
 public class SharpShooter extends JFrame {
 
     public SharpShooter() {
-        setTitle("Sharp Shooter");
-        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        setSize(710, 780);
-        setLayout(new FlowLayout());
-        setResizable(false);
-
+        super("Sharp Shooter");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (ClassNotFoundException | UnsupportedLookAndFeelException
+                | InstantiationException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        var target = new Canvas();
+        var statusBar = new StatusBar();
+        add(target, BorderLayout.CENTER);
+        add(statusBar, BorderLayout.SOUTH);
+        pack();
         setLocationRelativeTo(null);
-        setBackground(Color.DARK_GRAY);
-        initComponents();
-
         setVisible(true);
-    }
-
-    private void initComponents() {
-        addCanvas();
-        addStatusBar();
-    }
-
-    private void addStatusBar() {
-        JPanel statusBar = new JPanel();
-        statusBar.setPreferredSize(new Dimension(700, 20));
-        statusBar.setMinimumSize((new Dimension(700, 20)));
-
-        JLabel statusBarLabel = new JLabel("You are welcome!");
-        statusBarLabel.setName("Statusbar");
-        statusBar.add(statusBarLabel);
-
-        add(statusBar);
-    }
-
-    private void addCanvas() {
-        Canvas canvas = new Canvas("Canvas");
-
-        add(canvas);
-        canvas.setFocusable(true);
-        canvas.repaint();
+        new Game(target, statusBar );
     }
 }
