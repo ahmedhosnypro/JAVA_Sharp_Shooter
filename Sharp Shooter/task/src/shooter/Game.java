@@ -26,7 +26,7 @@ public class Game extends KeyAdapter {
         target.addKeyListener(this);
     }
 
-    private void shoot(Canvas target, Point bulletHole) {
+    private static void shoot(Canvas target, Point bulletHole) {
         lastShotScore = Math.max(0, 10 - (int) center.distance(bulletHole) / 30);
         target.holes.put(bulletHole.getLocation(), lastShotScore);
     }

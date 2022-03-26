@@ -17,178 +17,95 @@ import static org.hyperskill.hstest.testcase.CheckResult.correct;
 
 public class SharpShooterTest extends SwingTest {
 
-    private static final int TARGET_CIRCLE_STEP = 30;
-    private static final int TARGET_CENTER = 350;
-    private static final int SIGHT_RADIUS = 40;
-    private static final int MOVE_STEP = 10;
-    private final static int MAX_SHOOTING_ATTEMPTS = 12;
+  public SharpShooterTest() {
+    super(new SharpShooter());
+  }
 
-    public SharpShooterTest() {
-      super(new SharpShooter());
-    }
+  private static final int TARGET_CIRCLE_STEP = 30;
+  private static final int TARGET_CENTER = 350;
+  private static final int SIGHT_RADIUS = 40;
+  private static final int MOVE_STEP = 10;
 
-    @SwingComponent
-    private JLabelFixture statusbar;
+  private static final int START_X = 100;
+  private static final int START_Y = 100;
 
-    @SwingComponent
-    private JPanelFixture canvas;
+  @SwingComponent
+  private JPanelFixture canvas;
 
-    @DynamicTest(feedback = "At start the Statusbar should contain: " +
-                            "Press the SPACE bar to start the game.")
-    CheckResult test1() {
+  @SwingComponent
+  private JLabelFixture statusbar;
 
-        // before the game start the sight should be immovable
-        for (int i = 0; i < 10; i++) {
-            canvas.pressKey(VK_LEFT);
-        }
 
-        assertEquals(true,
-            statusbar.text().toLowerCase().contains("press the space bar to start the game"),
-            "Check statusbar text before game start.");
+  @DynamicTest(feedback = "It should be difficult to score 10 points.")
+  CheckResult test1() {
 
-        return correct();
-    }
+      canvas.pressKey(VK_SPACE);
+      canvas.releaseKey(VK_SPACE);
 
-    @DynamicTest(feedback = "After start the Statusbar should contain: " +
-            "Bullets left: " + MAX_SHOOTING_ATTEMPTS + ", your score: 0")
+      for (int i = START_X; i < TARGET_CENTER; i += MOVE_STEP) {
+          canvas.pressKey(VK_RIGHT);
+          canvas.releaseKey(VK_RIGHT);
+      }
+      for (int i = START_Y; i < TARGET_CENTER; i += MOVE_STEP) {
+          canvas.pressKey(VK_DOWN);
+          canvas.releaseKey(VK_DOWN);
+      }
+
+      canvas.pressKey(VK_SPACE);
+      canvas.releaseKey(VK_SPACE);
+
+      assertEquals(false,
+        statusbar.text().toLowerCase().contains("your score: " + 10),
+        "It should be difficult to score 10 points." );
+
+      return correct();
+  }
+
+    @DynamicTest(feedback = "It should be impossible to return to the start point.")
     CheckResult test2() {
 
-        canvas.pressKey(VK_SPACE);
-
-        assertEquals(false,
-                statusbar.text().toLowerCase().contains("press the space bar to start the game."),
-                "Check statusbar text immediately after the game start.");
-
-        assertEquals(true,
-                statusbar.text().toLowerCase().contains("bullets left: " + MAX_SHOOTING_ATTEMPTS),
-                "Wrong calculation of the attempts number.");
-
-        assertEquals(true,
-                statusbar.text().toLowerCase().contains("your score: 0"),
-                "Wrong calculation of the score.");
-
-        return correct();
-    }
-
-    private final String[][] SCORE_DATA = {
-        {"1",  "1", "0", "11", "10"},
-        {"2",  "1", "4", "10", "19"},
-        {"3",  "1", "3",  "9", "27"},
-        {"4",  "1", "3",  "8", "34"},
-        {"5",  "1", "3",  "7", "40"},
-        {"6",  "1", "3",  "6", "45"},
-        {"7",  "1", "3",  "5", "49"},
-        {"8",  "1", "3",  "4", "52"},
-        {"9",  "1", "3",  "3", "54"},
-        {"10", "1", "3",  "2", "55"},
-        {"11", "1", "3",  "1", "55"}
-    };
-
-    @DynamicTest(data = "SCORE_DATA", feedback = "Wrong calculation of the attempts number or score.")
-    CheckResult test3(final String number, final String spacePress, final String upPress,
-                      final String attempts, final String score) {
-
-        for (int i = 0; i < Integer.parseInt(upPress); i++) {
+        for (int i = START_X; i < TARGET_CENTER; i += MOVE_STEP) {
+            canvas.pressKey(VK_LEFT);
+            canvas.releaseKey(VK_LEFT);
+        }
+        for (int i = START_Y; i < TARGET_CENTER; i += MOVE_STEP) {
             canvas.pressKey(VK_UP);
+            canvas.releaseKey(VK_UP);
         }
-
-        for (int i = 0; i < Integer.parseInt(spacePress); i++) {
-            canvas.pressKey(VK_SPACE);
-        }
-
-        assertEquals(true,
-            statusbar.text().toLowerCase().contains("bullets left: " + attempts),
-        "Wrong calculation of the attempts number. " +
-             "After {0} shoot it should be: {1}.", number, attempts);
-
-        assertEquals(true,
-            statusbar.text().toLowerCase().contains("your score: " + score),
-        "Wrong calculation of the score. " +
-             "After {0} shoot it should be: {1}.", number, attempts);
-
-        return correct();
-    }
-
-    @DynamicTest(feedback = "After 12nd shooting the game should be over.")
-    CheckResult test4() {
 
         canvas.pressKey(VK_SPACE);
-
-        assertEquals(false,
-                statusbar.text().toLowerCase().contains("bullets left:"),
-                "Check statusbar text after the end of the game.");
-
-        assertEquals(true,
-                statusbar.text().toLowerCase().contains("game over"),
-                "Status bar should contain: Game over.");
-
-        assertEquals(true,
-                statusbar.text().toLowerCase().contains("your score: 55"),
-                "Status bar should contain: Your score: 55");
-
-        return correct();
-    }
-
-    private final int[] BULLET_HOLES = new int[] {0, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31};
-
-    @DynamicTest(data = "BULLET_HOLES", feedback = "After the end of the game the sight should have 11 bullet holes.")
-    CheckResult test5(final int dy) {
+        canvas.releaseKey(VK_SPACE);
 
         var screenshot = takeScreenshot();
 
-        var x = TARGET_CENTER;
-        var y = TARGET_CENTER - dy * MOVE_STEP;
-
-        assertEquals(true,
-                checkBullet(screenshot, x, y),
-                "Expected a bullet hole at point ({0}, {1})", x, y);
-
-        return correct();
-    }
-
-
-    @DynamicTest(feedback = "After the end of the game the sight should be immovable.")
-    CheckResult test6() {
-        for (int i = 0; i < 10; i++) {
-            canvas.pressKey(VK_RIGHT);
-        }
-        canvas.pressKey(VK_SPACE);
-
-        var screenshot = takeScreenshot();
-
-        var x = TARGET_CENTER - 10 * MOVE_STEP;
-        var y = 40;
-
         assertEquals(false,
-                checkBullet(screenshot, x, y),
-                "Not expected a bullet hole at point ({0}, {1})", x, y);
+                checkBullet(screenshot, START_X, START_Y),
+                "It should be impossible to return to the start point." );
 
         return correct();
     }
 
+  private BufferedImage takeScreenshot() {
+    var screenshotTaker = new ScreenshotTaker();
+    return screenshotTaker.takeScreenshotOf(canvas.target());
+  }
 
-    private BufferedImage takeScreenshot() {
-        var screenshotTaker = new ScreenshotTaker();
-        return screenshotTaker.takeScreenshotOf(canvas.target());
+  private boolean checkBullet(BufferedImage screenshot, int x, int y) {
+    return Color.BLACK.getRGB() != screenshot.getRGB(x, y) &&
+            Color.WHITE.getRGB() != screenshot.getRGB(x, y) &&
+            Color.DARK_GRAY.getRGB() != screenshot.getRGB(x, y);
+  }
+
+  private static void assertEquals(
+          final Object expected,
+          final Object actual,
+          final String error,
+          final Object... args) {
+
+    if (!expected.equals(actual)) {
+      final var feedback = MessageFormat.format(error, args);
+      throw new WrongAnswer(feedback);
     }
+  }
 
-    private boolean checkBullet(BufferedImage screenshot, int x, int y) {
-        return Color.BLACK.getRGB() != screenshot.getRGB(x, y) &&
-                Color.WHITE.getRGB() != screenshot.getRGB(x, y) &&
-                Color.DARK_GRAY.getRGB() != screenshot.getRGB(x, y);
-    }
-
-    // TODO: The game graph
-
-    private static void assertEquals(
-            final Object expected,
-            final Object actual,
-            final String error,
-            final Object... args) {
-
-        if (!expected.equals(actual)) {
-            final var feedback = MessageFormat.format(error, args);
-            throw new WrongAnswer(feedback);
-        }
-    }
 }

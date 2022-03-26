@@ -61,7 +61,7 @@ public class Canvas extends JPanel {
     }
 
     void addInstructions() {
-        var legend = new JLabel("<html><font color=red size=+1><b>\u2192 \u2190 \u2191 \u2193</b></font> - aim<br>" +
+            var legend = new JLabel("<html><font color=red size=+1><b>\u2192 \u2190 \u2191 \u2193</b></font> - aim<br>" +
                 "<font color=red>SPACE</font> - shot", SwingConstants.RIGHT);
         legend.setSize(new Dimension(100, 40));
         legend.setForeground(Color.WHITE);
